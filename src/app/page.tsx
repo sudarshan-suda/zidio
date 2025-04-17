@@ -8,11 +8,12 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash2 } from 'lucide-react';
+import { Trash2, Edit } from 'lucide-react';
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
+import { useToast } from "@/hooks/use-toast";
 
 type Task = {
   id: string;
@@ -29,6 +30,9 @@ export default function Home() {
   const [newDescription, setNewDescription] = useState('');
   const [priority, setPriority] = useState<Task['priority']>('medium');
   const [date, setDate] = useState<Date | undefined>();
+  const [isUpdate, setIsUpdate] = useState(false);
+  const [updateId, setUpdateId] = useState('');
+  const { toast } = useToast();
 
   useEffect(() => {
     const storedTasks = localStorage.getItem('tasks');
@@ -43,9 +47,17 @@ export default function Home() {
 
   const addTask = () => {
     if (newTask.trim() !== '') {
+      if (isUpdate) {
+        updateTask();
+        return;
+      }
       setTasks([...tasks, { id: Date.now().toString(), text: newTask, description: newDescription, completed: false, priority: priority, date: date }]);
       setNewTask('');
       setNewDescription('');
+      setDate(undefined);
+      toast({
+        title: "Task added successfully!",
+      })
     }
   };
 
@@ -60,6 +72,34 @@ export default function Home() {
   const deleteTask = (id: string) => {
     setTasks(tasks.filter((task) => task.id !== id));
   };
+
+  const handleUpdate = (task: Task) => {
+    setIsUpdate(true);
+    setNewTask(task.text);
+    setNewDescription(task.description);
+    setPriority(task.priority);
+    setDate(task.date);
+    setUpdateId(task.id);
+  }
+
+  const updateTask = () => {
+    setTasks(
+      tasks.map((task) => {
+        if (task.id === updateId) {
+          return { ...task, text: newTask, description: newDescription, priority: priority, date: date };
+        }
+        return task;
+      })
+    );
+    setNewTask('');
+    setNewDescription('');
+    setDate(undefined);
+    setIsUpdate(false);
+    setUpdateId('');
+      toast({
+        title: "Task updated successfully!",
+      })
+  }
 
   const getPriorityColor = (priority: Task['priority']) => {
     switch (priority) {
@@ -132,7 +172,7 @@ export default function Home() {
               />
             </PopoverContent>
           </Popover>
-          <Button onClick={addTask} className="bg-accent text-background hover:bg-accent/80">Add Task</Button>
+          <Button onClick={addTask} className="bg-accent text-background hover:bg-accent/80">{isUpdate ? 'Update Task' : 'Add Task'}</Button>
         </div>
       </div>
       <ul className="space-y-2">
@@ -168,6 +208,14 @@ export default function Home() {
             </div>
             <div className="flex items-center">
               <div className={`rounded-full w-3 h-3 mr-2 ${getPriorityColor(task.priority)}`}></div>
+              <Button
+                  onClick={() => handleUpdate(task)}
+                  variant="ghost"
+                  className="text-blue-500 hover:bg-blue-100"
+              >
+                <Edit className="h-4 w-4" />
+                <span className="sr-only">Update</span>
+              </Button>
               <Button
                 onClick={() => deleteTask(task.id)}
                 variant="ghost"
