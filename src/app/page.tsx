@@ -161,9 +161,11 @@ export default function Home() {
     localStorage.setItem('user', username);
     localStorage.setItem('password', password);
     setIsRegisterOpen(false);
+    setIsAuthenticated(true); // Automatically log in after registration
+    localStorage.setItem('isAuthenticated', 'true');
     toast({
-      title: "Registration successful! Please log in.",
-    })
+      title: "Registration successful!",
+    });
   };
 
   const handleLogout = () => {
