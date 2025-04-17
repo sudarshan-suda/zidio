@@ -12,6 +12,7 @@ import { Trash2 } from 'lucide-react';
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
 
 type Task = {
   id: string;
@@ -73,9 +74,15 @@ export default function Home() {
     }
   };
 
+  const completedTasks = tasks.filter((task) => task.completed).length;
+  const progress = tasks.length > 0 ? (completedTasks / tasks.length) * 100 : 0;
+
   return (
     <main className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4 text-primary">TaskMaster</h1>
+
+      <Progress value={progress} className="mb-4" />
+
       <div className="md:flex flex-col gap-4 mb-4">
         <Input
           type="text"
