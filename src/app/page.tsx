@@ -1,20 +1,17 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Checkbox } from "@/components/ui/checkbox";
+import React, { useEffect, useState } from 'react';
+import {
+  Input, Button, Calendar, Checkbox, Label, Select,
+  SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Textarea, Progress, Popover, PopoverContent, PopoverTrigger,
+  Dialog, DialogContent, DialogDescription, DialogHeader,
+  DialogTitle, DialogTrigger
+} from '@/components/ui';
 import { Trash2, Edit, User } from 'lucide-react';
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Progress } from "@/components/ui/progress";
-import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
 type Task = {
   id: string;
@@ -27,275 +24,135 @@ type Task = {
 
 export default function Home() {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [newTask, setNewTask] = useState('');
-  const [newDescription, setNewDescription] = useState('');
-  const [priority, setPriority] = useState<Task['priority']>('medium');
-  const [date, setDate] = useState<Date | undefined>();
-  const [isUpdate, setIsUpdate] = useState(false);
-  const [updateId, setUpdateId] = useState('');
-  const { toast } = useToast();
+  const [form, setForm] = useState({ text: '', description: '', priority: 'medium', date: undefined as Date | undefined });
+  const [editingId, setEditingId] = useState('');
+  const [auth, setAuth] = useState({ username: '', password: '', isAuthenticated: false });
+  const [dialog, setDialog] = useState({ login: false, register: false });
 
-  // Authentication states
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const { toast } = useToast();
 
   useEffect(() => {
     const storedTasks = localStorage.getItem('tasks');
-    if (storedTasks) {
-      setTasks(JSON.parse(storedTasks));
-    }
-
-    // Check authentication status on load
-    const auth = localStorage.getItem('isAuthenticated');
-    if (auth === 'true') {
-      setIsAuthenticated(true);
-    }
+    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+    if (storedTasks) setTasks(JSON.parse(storedTasks));
+    setAuth(prev => ({ ...prev, isAuthenticated }));
   }, []);
 
   useEffect(() => {
     localStorage.setItem('tasks', JSON.stringify(tasks));
   }, [tasks]);
 
-  const addTask = () => {
-    if (!isAuthenticated) {
-      toast({
-        title: "Please log in to add tasks.",
-        variant: "destructive"
-      });
+  const handleChange = (key: keyof typeof form, value: any) => {
+    setForm(prev => ({ ...prev, [key]: value }));
+  };
+
+  const addOrUpdateTask = () => {
+    if (!auth.isAuthenticated) {
+      toast({ title: 'Please log in to add tasks.', variant: 'destructive' });
       return;
     }
 
-    if (newTask.trim() !== '') {
-      if (isUpdate) {
-        updateTask();
-        return;
-      }
-      setTasks([...tasks, { id: Date.now().toString(), text: newTask, description: newDescription, completed: false, priority: priority, date: date }]);
-      setNewTask('');
-      setNewDescription('');
-      setDate(undefined);
-      toast({
-        title: "Task added successfully!",
-      })
-    }
-  };
+    if (form.text.trim() === '') return;
 
-  const toggleComplete = (id: string) => {
-    setTasks(
-      tasks.map((task) =>
-        task.id === id ? { ...task, completed: !task.completed } : task
-      )
-    );
-  };
-
-  const deleteTask = (id: string) => {
-    setTasks(tasks.filter((task) => task.id !== id));
-  };
-
-  const handleUpdate = (task: Task) => {
-    setIsUpdate(true);
-    setNewTask(task.text);
-    setNewDescription(task.description);
-    setPriority(task.priority);
-    setDate(task.date);
-    setUpdateId(task.id);
-  }
-
-  const updateTask = () => {
-    setTasks(
-      tasks.map((task) => {
-        if (task.id === updateId) {
-          return { ...task, text: newTask, description: newDescription, priority: priority, date: date };
-        }
-        return task;
-      })
-    );
-    setNewTask('');
-    setNewDescription('');
-    setDate(undefined);
-    setIsUpdate(false);
-    setUpdateId('');
-      toast({
-        title: "Task updated successfully!",
-      })
-  }
-
-  const getPriorityColor = (priority: Task['priority']) => {
-    switch (priority) {
-      case 'high':
-        return 'bg-priority-high';
-      case 'medium':
-        return 'bg-priority-medium';
-      case 'low':
-        return 'bg-priority-low';
-      default:
-        return 'bg-gray-500';
-    }
-  };
-
-  const completedTasks = tasks.filter((task) => task.completed).length;
-  const progress = tasks.length > 0 ? (completedTasks / tasks.length) * 100 : 0;
-
-  // Authentication handlers
-  const handleLogin = () => {
-    if (username === 'user' && password === 'password') {
-      setIsAuthenticated(true);
-      localStorage.setItem('isAuthenticated', 'true');
-      setIsLoginOpen(false);
-      toast({
-        title: "Login successful!",
-      })
+    if (editingId) {
+      setTasks(tasks.map(task => task.id === editingId ? { ...task, ...form } : task));
+      setEditingId('');
+      toast({ title: 'Task updated!' });
     } else {
-      toast({
-        title: "Invalid credentials.",
-        variant: "destructive"
-      });
+      const newTask: Task = { id: Date.now().toString(), ...form, completed: false };
+      setTasks([...tasks, newTask]);
+      toast({ title: 'Task added!' });
+    }
+
+    setForm({ text: '', description: '', priority: 'medium', date: undefined });
+  };
+
+  const handleEdit = (task: Task) => {
+    setForm(task);
+    setEditingId(task.id);
+  };
+
+  const handleDelete = (id: string) => setTasks(tasks.filter(task => task.id !== id));
+  const toggleComplete = (id: string) => setTasks(tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
+  const getPriorityColor = (priority: Task['priority']) => ({
+    high: 'bg-priority-high',
+    medium: 'bg-priority-medium',
+    low: 'bg-priority-low'
+  }[priority]);
+
+  const progress = tasks.length ? (tasks.filter(t => t.completed).length / tasks.length) * 100 : 0;
+
+  const handleLogin = () => {
+    if (auth.username === 'user' && auth.password === 'password') {
+      localStorage.setItem('isAuthenticated', 'true');
+      setAuth(prev => ({ ...prev, isAuthenticated: true }));
+      setDialog({ login: false, register: false });
+      toast({ title: 'Login successful!' });
+    } else {
+      toast({ title: 'Invalid credentials', variant: 'destructive' });
     }
   };
 
   const handleRegister = () => {
-    // In a real application, you'd save this to a database
-    localStorage.setItem('user', username);
-    localStorage.setItem('password', password);
-    setIsRegisterOpen(false);
-    setIsAuthenticated(true); // Automatically log in after registration
+    localStorage.setItem('user', auth.username);
+    localStorage.setItem('password', auth.password);
     localStorage.setItem('isAuthenticated', 'true');
-    toast({
-      title: "Registration successful!",
-    });
+    setAuth(prev => ({ ...prev, isAuthenticated: true }));
+    setDialog({ login: false, register: false });
+    toast({ title: 'Registered successfully!' });
   };
 
-  const handleLogout = () => {
-    setIsAuthenticated(false);
+  const logout = () => {
+    setAuth({ ...auth, isAuthenticated: false });
     localStorage.removeItem('isAuthenticated');
-    toast({
-      title: "Logged out successfully!",
-    })
+    toast({ title: 'Logged out!' });
   };
 
   return (
     <main className="container mx-auto p-4">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold text-primary">TaskMaster</h1>
-
-        {isAuthenticated ? (
-          <div className="flex items-center space-x-4">
+      <header className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-bold">TaskMaster</h1>
+        {auth.isAuthenticated ? (
+          <div className="flex items-center gap-3">
             <User className="h-5 w-5" />
-            <span>Welcome, user!</span>
-            <Button variant="outline" onClick={handleLogout}>Logout</Button>
+            <span>Welcome, {auth.username || 'user'}!</span>
+            <Button variant="outline" onClick={logout}>Logout</Button>
           </div>
         ) : (
-          <div className="flex items-center space-x-2">
-            <Dialog open={isLoginOpen} onOpenChange={setIsLoginOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline">Login</Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Login</DialogTitle>
-                  <DialogDescription>
-                    Enter your username and password to log in.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="username" className="text-right">
-                      Username
-                    </Label>
-                    <Input
-                      type="text"
-                      id="username"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      className="col-span-3"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="password" className="text-right">
-                      Password
-                    </Label>
-                    <Input
-                      type="password"
-                      id="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="col-span-3"
-                    />
-                  </div>
-                </div>
-                <Button type="submit" onClick={handleLogin}>Log In</Button>
+          <div className="flex gap-2">
+            <Dialog open={dialog.login} onOpenChange={val => setDialog(prev => ({ ...prev, login: val }))}>
+              <DialogTrigger asChild><Button variant="outline">Login</Button></DialogTrigger>
+              <DialogContent>
+                <DialogHeader><DialogTitle>Login</DialogTitle></DialogHeader>
+                <DialogDescription>Enter your login details.</DialogDescription>
+                <Input placeholder="Username" value={auth.username} onChange={e => setAuth({ ...auth, username: e.target.value })} />
+                <Input placeholder="Password" type="password" value={auth.password} onChange={e => setAuth({ ...auth, password: e.target.value })} />
+                <Button onClick={handleLogin}>Login</Button>
               </DialogContent>
             </Dialog>
-
-            <Dialog open={isRegisterOpen} onOpenChange={setIsRegisterOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline">Register</Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Register</DialogTitle>
-                  <DialogDescription>
-                    Create a new account by entering a username and password.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="register-username" className="text-right">
-                      Username
-                    </Label>
-                    <Input
-                      type="text"
-                      id="register-username"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      className="col-span-3"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="register-password" className="text-right">
-                      Password
-                    </Label>
-                    <Input
-                      type="password"
-                      id="register-password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="col-span-3"
-                    />
-                  </div>
-                </div>
-                <Button type="submit" onClick={handleRegister}>Register</Button>
+            <Dialog open={dialog.register} onOpenChange={val => setDialog(prev => ({ ...prev, register: val }))}>
+              <DialogTrigger asChild><Button variant="outline">Register</Button></DialogTrigger>
+              <DialogContent>
+                <DialogHeader><DialogTitle>Register</DialogTitle></DialogHeader>
+                <DialogDescription>Create a new account.</DialogDescription>
+                <Input placeholder="Username" value={auth.username} onChange={e => setAuth({ ...auth, username: e.target.value })} />
+                <Input placeholder="Password" type="password" value={auth.password} onChange={e => setAuth({ ...auth, password: e.target.value })} />
+                <Button onClick={handleRegister}>Register</Button>
               </DialogContent>
             </Dialog>
           </div>
         )}
-      </div>
+      </header>
 
       <Progress value={progress} className="mb-4" />
 
-      {isAuthenticated && (
-        <div className="md:flex flex-col gap-4 mb-4">
-          <Input
-            type="text"
-            placeholder="Add a task..."
-            value={newTask}
-            onChange={(e) => setNewTask(e.target.value)}
-            className="flex-grow mb-2 md:mb-0"
-          />
-          <Textarea
-            placeholder="Add a description..."
-            value={newDescription}
-            onChange={(e) => setNewDescription(e.target.value)}
-            className="flex-grow mb-2 md:mb-0"
-          />
-          <div className='md:flex md:items-center gap-2'>
-            <Select onValueChange={setPriority} defaultValue={priority}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Priority" />
-              </SelectTrigger>
+      {auth.isAuthenticated && (
+        <section className="space-y-2 mb-4">
+          <Input placeholder="Task title..." value={form.text} onChange={e => handleChange('text', e.target.value)} />
+          <Textarea placeholder="Description..." value={form.description} onChange={e => handleChange('description', e.target.value)} />
+          <div className="flex items-center gap-2">
+            <Select onValueChange={val => handleChange('priority', val)} defaultValue={form.priority}>
+              <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="low">Low</SelectItem>
                 <SelectItem value="medium">Medium</SelectItem>
@@ -304,81 +161,35 @@ export default function Home() {
             </Select>
             <Popover>
               <PopoverTrigger asChild>
-                <Button
-                  variant={"outline"}
-                  className={cn(
-                    "w-[240px] pl-3 text-left font-normal",
-                    !date && "text-muted-foreground"
-                  )}
-                >
-                  {date ? format(date, "PPP") : <span>Pick a date</span>}
+                <Button variant="outline" className="w-[240px]">
+                  {form.date ? format(form.date, 'PPP') : 'Pick a date'}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start" side="bottom">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={setDate}
-                  disabled={(date) =>
-                    date < new Date()
-                  }
-                  initialFocus
-                />
+              <PopoverContent align="start">
+                <Calendar selected={form.date} onSelect={val => handleChange('date', val)} disabled={d => d < new Date()} />
               </PopoverContent>
             </Popover>
-            <Button onClick={addTask} className="bg-accent text-background hover:bg-accent/80">{isUpdate ? 'Update Task' : 'Add Task'}</Button>
+            <Button onClick={addOrUpdateTask}>{editingId ? 'Update Task' : 'Add Task'}</Button>
           </div>
-        </div>
+        </section>
       )}
+
       <ul className="space-y-2">
-        {tasks.map((task) => (
-          <li
-            key={task.id}
-            className="flex items-center justify-between p-3 rounded shadow-sm hover:bg-secondary transition-colors"
-          >
-            <div className="flex flex-col">
+        {tasks.map(task => (
+          <li key={task.id} className="flex justify-between items-start p-3 bg-white rounded shadow">
+            <div>
               <div className="flex items-center">
-                <Checkbox
-                  id={`task-${task.id}`}
-                  checked={task.completed}
-                  onCheckedChange={() => toggleComplete(task.id)}
-                />
-                <Label
-                  htmlFor={`task-${task.id}`}
-                  className="ml-2 cursor-pointer flex-grow line-clamp-1"
-                >
-                  {task.text}
-                  {task.date && (
-                    <span className="ml-2 text-muted-foreground">
-                      ({format(task.date, "PPP")})
-                    </span>
-                  )}
+                <Checkbox checked={task.completed} onCheckedChange={() => toggleComplete(task.id)} />
+                <Label className="ml-2">
+                  {task.text} {task.date && <span className="ml-2 text-muted-foreground">({format(task.date, 'PPP')})</span>}
                 </Label>
               </div>
-              {task.description && (
-                <p className="ml-6 text-sm text-muted-foreground line-clamp-2">
-                  {task.description}
-                </p>
-              )}
+              {task.description && <p className="ml-6 text-sm text-muted-foreground">{task.description}</p>}
             </div>
-            <div className="flex items-center">
-              <div className={`rounded-full w-3 h-3 mr-2 ${getPriorityColor(task.priority)}`}></div>
-              <Button
-                onClick={() => handleUpdate(task)}
-                variant="ghost"
-                className="text-blue-500 hover:bg-blue-100"
-              >
-                <Edit className="h-4 w-4" />
-                <span className="sr-only">Update</span>
-              </Button>
-              <Button
-                onClick={() => deleteTask(task.id)}
-                variant="ghost"
-                className="text-red-500 hover:bg-red-100"
-              >
-                <Trash2 className="h-4 w-4" />
-                <span className="sr-only">Delete</span>
-              </Button>
+            <div className="flex items-center gap-2">
+              <div className={`w-3 h-3 rounded-full ${getPriorityColor(task.priority)}`} />
+              <Button onClick={() => handleEdit(task)} variant="ghost"><Edit className="h-4 w-4" /></Button>
+              <Button onClick={() => handleDelete(task.id)} variant="ghost"><Trash2 className="h-4 w-4" /></Button>
             </div>
           </li>
         ))}
@@ -386,3 +197,4 @@ export default function Home() {
     </main>
   );
 }
+
