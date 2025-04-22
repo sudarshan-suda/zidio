@@ -185,19 +185,21 @@ export default function Home() {
             </Select>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="w-[240px]">
+                <Button variant="outline" className="w-[240px] text-left font-normal">
                   {form.date ? format(form.date, 'PPP') : 'Pick a date'}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent align="start">
+              <PopoverContent align="start" className="w-auto p-0">
                 <Calendar
+                  mode="single"
                   selected={form.date}
-                  onSelect={(val) => {
-                    if (val) { // Check if val is not null or undefined
-                      handleChange('date', val);
+                  onSelect={(date) => {
+                    if (date) {
+                      handleChange('date', date);
                     }
                   }}
-                  disabled={d => d < new Date()}
+                  initialFocus
+                  disabled={(date) => date < new Date()}
                 />
               </PopoverContent>
             </Popover>
