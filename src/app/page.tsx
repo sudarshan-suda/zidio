@@ -193,7 +193,7 @@ export default function Home() {
                 <Calendar
                   selected={form.date}
                   onSelect={(val) => {
-                    if (val instanceof Date) {
+                    if (val) { // Check if val is not null or undefined
                       handleChange('date', val);
                     }
                   }}
