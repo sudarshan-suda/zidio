@@ -190,7 +190,15 @@ export default function Home() {
                 </Button>
               </PopoverTrigger>
               <PopoverContent align="start">
-                <Calendar selected={form.date} onSelect={val => handleChange('date', val)} disabled={d => d < new Date()} />
+                <Calendar
+                  selected={form.date}
+                  onSelect={(val) => {
+                    if (val instanceof Date) {
+                      handleChange('date', val);
+                    }
+                  }}
+                  disabled={d => d < new Date()}
+                />
               </PopoverContent>
             </Popover>
             <Button onClick={addOrUpdateTask}>{editingId ? 'Update Task' : 'Add Task'}</Button>
