@@ -29,8 +29,16 @@ export default function Home() {
   const [auth, setAuth] = useState({ username: '', password: '', isAuthenticated: false });
   const [dialog, setDialog] = useState({ login: false, register: false });
   const [backgroundColor, setBackgroundColor] = useState('bg-gradient-to-r from-blue-200 to-green-200'); // Initial background
+  const [colorIndex, setColorIndex] = useState(0);
 
   const { toast } = useToast();
+
+  const backgroundColors = [
+    'bg-gradient-to-r from-purple-200 to-pink-200',
+    'bg-gradient-to-r from-yellow-200 to-red-200',
+    'bg-gradient-to-r from-green-200 to-blue-200',
+    'bg-gradient-to-r from-teal-200 to-purple-200',
+  ];
 
   useEffect(() => {
     const storedTasks = localStorage.getItem('tasks');
@@ -88,7 +96,10 @@ export default function Home() {
       localStorage.setItem('isAuthenticated', 'true');
       setAuth(prev => ({ ...prev, isAuthenticated: true }));
       setDialog({ login: false, register: false });
-      setBackgroundColor('bg-gradient-to-r from-purple-200 to-pink-200'); // Change color on login
+
+      // Change background color dynamically
+      setBackgroundColor(backgroundColors[colorIndex % backgroundColors.length]);
+      setColorIndex(prevIndex => (prevIndex + 1) % backgroundColors.length);
       toast({ title: 'Login successful!' });
     } else {
       toast({ title: 'Invalid credentials', variant: 'destructive' });
@@ -101,7 +112,11 @@ export default function Home() {
     localStorage.setItem('isAuthenticated', 'true');
     setAuth(prev => ({ ...prev, isAuthenticated: true }));
     setDialog({ login: false, register: false });
-    setBackgroundColor('bg-gradient-to-r from-purple-200 to-pink-200'); // Change color on registration
+
+    // Change background color dynamically
+    setBackgroundColor(backgroundColors[colorIndex % backgroundColors.length]);
+    setColorIndex(prevIndex => (prevIndex + 1) % backgroundColors.length);
+
     toast({ title: 'Registered successfully!' });
   };
 
