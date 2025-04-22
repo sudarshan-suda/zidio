@@ -28,6 +28,7 @@ export default function Home() {
   const [editingId, setEditingId] = useState('');
   const [auth, setAuth] = useState({ username: '', password: '', isAuthenticated: false });
   const [dialog, setDialog] = useState({ login: false, register: false });
+  const [backgroundColor, setBackgroundColor] = useState('bg-gradient-to-r from-blue-200 to-green-200'); // Initial background
 
   const { toast } = useToast();
 
@@ -87,6 +88,7 @@ export default function Home() {
       localStorage.setItem('isAuthenticated', 'true');
       setAuth(prev => ({ ...prev, isAuthenticated: true }));
       setDialog({ login: false, register: false });
+      setBackgroundColor('bg-gradient-to-r from-purple-200 to-pink-200'); // Change color on login
       toast({ title: 'Login successful!' });
     } else {
       toast({ title: 'Invalid credentials', variant: 'destructive' });
@@ -99,17 +101,19 @@ export default function Home() {
     localStorage.setItem('isAuthenticated', 'true');
     setAuth(prev => ({ ...prev, isAuthenticated: true }));
     setDialog({ login: false, register: false });
+    setBackgroundColor('bg-gradient-to-r from-purple-200 to-pink-200'); // Change color on registration
     toast({ title: 'Registered successfully!' });
   };
 
   const logout = () => {
     setAuth({ ...auth, isAuthenticated: false });
     localStorage.removeItem('isAuthenticated');
+    setBackgroundColor('bg-gradient-to-r from-blue-200 to-green-200'); // Reset color on logout
     toast({ title: 'Logged out!' });
   };
 
   return (
-    <main className="container mx-auto p-4 bg-gradient-to-r from-blue-200 to-green-200 min-h-screen">
+    <main className={`container mx-auto p-4 ${backgroundColor} min-h-screen`}>
       <header className="flex items-center justify-between mb-4 bg-white/80 backdrop-blur-sm rounded-md p-3">
         <h1 className="text-2xl font-bold text-gray-800">TaskMaster</h1>
         {auth.isAuthenticated ? (
@@ -197,5 +201,3 @@ export default function Home() {
     </main>
   );
 }
-
-
