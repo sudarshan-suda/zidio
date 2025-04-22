@@ -107,6 +107,11 @@ export default function Home() {
   };
 
   const handleRegister = () => {
+    if (auth.username.trim() === '' || auth.password.trim() === '') {
+      toast({ title: 'Username and password cannot be blank.', variant: 'destructive' });
+      return;
+    }
+
     localStorage.setItem('user', auth.username);
     localStorage.setItem('password', auth.password);
     localStorage.setItem('isAuthenticated', 'true');
@@ -216,4 +221,3 @@ export default function Home() {
     </main>
   );
 }
-
