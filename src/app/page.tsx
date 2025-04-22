@@ -109,34 +109,34 @@ export default function Home() {
   };
 
   return (
-    <main className="container mx-auto p-4">
-      <header className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">TaskMaster</h1>
+    <main className="container mx-auto p-4 bg-gradient-to-r from-blue-200 to-green-200 min-h-screen">
+      <header className="flex items-center justify-between mb-4 bg-white/80 backdrop-blur-sm rounded-md p-3">
+        <h1 className="text-2xl font-bold text-gray-800">TaskMaster</h1>
         {auth.isAuthenticated ? (
           <div className="flex items-center gap-3">
-            <User className="h-5 w-5" />
-            <span>Welcome, {auth.username || 'user'}!</span>
+            <User className="h-5 w-5 text-gray-700" />
+            <span className="text-gray-700">Welcome, {auth.username || 'user'}!</span>
             <Button variant="outline" onClick={logout}>Logout</Button>
           </div>
         ) : (
           <div className="flex gap-2">
             <Dialog open={dialog.login} onOpenChange={val => setDialog(prev => ({ ...prev, login: val }))}>
               <DialogTrigger asChild><Button variant="outline">Login</Button></DialogTrigger>
-              <DialogContent>
-                <DialogHeader><DialogTitle>Login</DialogTitle></DialogHeader>
-                <DialogDescription>Enter your login details.</DialogDescription>
-                <Input placeholder="Username" value={auth.username} onChange={e => setAuth({ ...auth, username: e.target.value })} />
-                <Input placeholder="Password" type="password" value={auth.password} onChange={e => setAuth({ ...auth, password: e.target.value })} />
+              <DialogContent className="bg-gray-100 rounded-md p-4">
+                <DialogHeader><DialogTitle className="text-gray-800">Login</DialogTitle></DialogHeader>
+                <DialogDescription className="text-gray-600">Enter your login details.</DialogDescription>
+                <Input placeholder="Username" value={auth.username} onChange={e => setAuth({ ...auth, username: e.target.value })} className="mb-2" />
+                <Input placeholder="Password" type="password" value={auth.password} onChange={e => setAuth({ ...auth, password: e.target.value })} className="mb-2" />
                 <Button onClick={handleLogin}>Login</Button>
               </DialogContent>
             </Dialog>
             <Dialog open={dialog.register} onOpenChange={val => setDialog(prev => ({ ...prev, register: val }))}>
               <DialogTrigger asChild><Button variant="outline">Register</Button></DialogTrigger>
-              <DialogContent>
-                <DialogHeader><DialogTitle>Register</DialogTitle></DialogHeader>
-                <DialogDescription>Create a new account.</DialogDescription>
-                <Input placeholder="Username" value={auth.username} onChange={e => setAuth({ ...auth, username: e.target.value })} />
-                <Input placeholder="Password" type="password" value={auth.password} onChange={e => setAuth({ ...auth, password: e.target.value })} />
+              <DialogContent className="bg-gray-100 rounded-md p-4">
+                <DialogHeader><DialogTitle className="text-gray-800">Register</DialogTitle></DialogHeader>
+                <DialogDescription className="text-gray-600">Create a new account.</DialogDescription>
+                <Input placeholder="Username" value={auth.username} onChange={e => setAuth({ ...auth, username: e.target.value })} className="mb-2" />
+                <Input placeholder="Password" type="password" value={auth.password} onChange={e => setAuth({ ...auth, password: e.target.value })} className="mb-2" />
                 <Button onClick={handleRegister}>Register</Button>
               </DialogContent>
             </Dialog>
@@ -147,7 +147,7 @@ export default function Home() {
       <Progress value={progress} className="mb-4" />
 
       {auth.isAuthenticated && (
-        <section className="space-y-2 mb-4">
+        <section className="space-y-2 mb-4 bg-white/80 backdrop-blur-sm rounded-md p-3">
           <Input placeholder="Task title..." value={form.text} onChange={e => handleChange('text', e.target.value)} />
           <Textarea placeholder="Description..." value={form.description} onChange={e => handleChange('description', e.target.value)} />
           <div className="flex items-center gap-2">
@@ -180,7 +180,7 @@ export default function Home() {
             <div>
               <div className="flex items-center">
                 <Checkbox checked={task.completed} onCheckedChange={() => toggleComplete(task.id)} />
-                <Label className="ml-2">
+                <Label className="ml-2 text-gray-800">
                   {task.text} {task.date && <span className="ml-2 text-muted-foreground">({format(task.date, 'PPP')})</span>}
                 </Label>
               </div>
@@ -197,4 +197,5 @@ export default function Home() {
     </main>
   );
 }
+
 
