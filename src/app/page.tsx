@@ -77,11 +77,21 @@ export default function Home() {
   };
 
   const handleEdit = (task: Task) => {
+    if (!auth.isAuthenticated) {
+      toast({ title: 'Please log in to edit tasks.', variant: 'destructive' });
+      return;
+    }
     setForm(task);
     setEditingId(task.id);
   };
 
-  const handleDelete = (id: string) => setTasks(tasks.filter(task => task.id !== id));
+  const handleDelete = (id: string) => {
+    if (!auth.isAuthenticated) {
+      toast({ title: 'Please log in to delete tasks.', variant: 'destructive' });
+      return;
+    }
+    setTasks(tasks.filter(task => task.id !== id));
+  }
   const toggleComplete = (id: string) => setTasks(tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
   const getPriorityColor = (priority: Task['priority']) => ({
     high: 'bg-priority-high',
@@ -94,7 +104,7 @@ export default function Home() {
   const handleLogin = () => {
     if (auth.username === 'user' && auth.password === 'password') {
       localStorage.setItem('isAuthenticated', 'true');
-      setAuth(prev => ({ ...prev, isAuthenticated: true }));
+      setAuth(prev => ({ ...prev, isAuthenticated: true, username: auth.username }));
       setDialog({ login: false, register: false });
 
       // Change background color dynamically
@@ -115,7 +125,7 @@ export default function Home() {
     localStorage.setItem('user', auth.username);
     localStorage.setItem('password', auth.password);
     localStorage.setItem('isAuthenticated', 'true');
-    setAuth(prev => ({ ...prev, isAuthenticated: true }));
+    setAuth(prev => ({ ...prev, isAuthenticated: true, username: auth.username }));
     setDialog({ login: false, register: false });
 
     // Change background color dynamically
@@ -126,7 +136,7 @@ export default function Home() {
   };
 
   const logout = () => {
-    setAuth({ ...auth, isAuthenticated: false });
+    setAuth({ ...auth, isAuthenticated: false, username: '' });
     localStorage.removeItem('isAuthenticated');
     setBackgroundColor('bg-gradient-to-r from-blue-200 to-green-200'); // Reset color on logout
     toast({ title: 'Logged out!' });
@@ -222,8 +232,8 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-2">
               <div className={`w-3 h-3 rounded-full ${getPriorityColor(task.priority)}`} />
-              <Button onClick={() => handleEdit(task)} variant="ghost"><Edit className="h-4 w-4" /></Button>
-              <Button onClick={() => handleDelete(task.id)} variant="ghost"><Trash2 className="h-4 w-4" /></Button>
+              {auth.isAuthenticated && <Button onClick={() => handleEdit(task)} variant="ghost"><Edit className="h-4 w-4" /></Button>}
+              {auth.isAuthenticated && <Button onClick={() => handleDelete(task.id)} variant="ghost"><Trash2 className="h-4 w-4" /></Button>}
             </div>
           </li>
         ))}
