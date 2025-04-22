@@ -34,10 +34,10 @@ export default function Home() {
   const { toast } = useToast();
 
   const backgroundColors = [
-    'bg-gradient-to-r from-purple-200 to-pink-200',
+    'bg-gradient-to-r from-blue-200 to-indigo-200',
     'bg-gradient-to-r from-yellow-200 to-red-200',
     'bg-gradient-to-r from-green-200 to-blue-200',
-    'bg-gradient-to-r from-teal-200 to-purple-200',
+    'bg-gradient-to-r from-teal-200 to-blue-200',
   ];
 
   useEffect(() => {
@@ -216,3 +216,4 @@ export default function Home() {
     </main>
   );
 }
+
